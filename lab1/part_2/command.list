@@ -1,0 +1,121 @@
+#!/bin/bash
+
+# 2. Подсчет запросов от YandexBot
+# Ищет все строки в логе, содержащие "YandexBot", и подсчитывает их количество
+grep "YandexBot" /opt/access.log | wc -l
+
+# 3. Извлечение неуспешных запросов к странице ~malyavko
+# Ищет запросы к странице ~malyavko, исключая успешные (с кодами 2xx),
+# и сохраняет результат в файл malyavko_miss.log
+grep '/~malyavko' /opt/access.log | grep -v 'HTTP/.*" 2[0-9][0-9]' > ~/sysadm_lab_1_2/malyavko_miss.log
+
+# 4. Поиск 10 самых больших успешных ответов для страниц ~malyavko
+gawk -F'"' '  # Устанавливаем двойные кавычки как разделитель полей
+{
+  req=$2;                    # Извлекаем HTTP запрос (второе поле)
+  split(req,r," "); url=r[2]; # Разбиваем запрос и получаем URL
+  
+  split($3,a,/[[:space:]]+/); # Разбиваем третье поле (статус и размер)
+  status=a[2];                # Код статуса HTTP
+  size=a[3];                  # Размер ответа
+  
+  # Проверяем, что размер указан, иначе устанавливаем 0
+  if (size=="-" || size=="") size=0;
+  
+  # Если статус 200 и URL содержит ~malyavko
+  if (status=="200" && url ~ /^\/~malyavko/) {
+    # Сохраняем максимальный размер для каждого URL
+    if (!(url in max) || (size+0) > max[url]) { 
+      max[url]=size+0;        # Максимальный размер
+      rq[url]=req;            # Соответствующий запрос
+    }
+  }
+}
+END{ 
+  # Выводим все накопленные URL с максимальными размерами
+  for (u in max) printf "\"%s\" %d\n", rq[u], max[u]; 
+}
+' /opt/access.log | sort -k2,2nr -k1,1 | head -10 > ~/sysadm_lab_1_2/malyavko_top.log
+# Сортируем по размеру (числовой, обратный) и берем первые 10 записей
+
+# 5. Извлечение запросов в ночное время (с 21:00 до 8:29 следующего дня)
+gawk '
+# Функция преобразования названия месяца в номер
+function mon2num(m){
+  return (m=="Jan")?1:(m=="Feb")?2:(m=="Mar")?3:(m=="Apr")?4:(m=="May")?5:(m=="Jun")?6:(m=="Jul")?7:(m=="Aug")?8:(m=="Sep")?9:(m=="Oct")?10:(m=="Nov")?11:(m=="Dec")?12:0
+}
+{
+  # Извлекаем компоненты даты из формата лога [dd/mmm/yyyy:hh:mm:ss]
+  if (match($0, /\[([0-9][0-9])\/([A-Za-z][A-Za-z][A-Za-z])\/([0-9][0-9][0-9][0-9]):([0-9][0-9]):([0-9][0-9]):([0-9][0-9])/, t)) {
+    dd=t[1]; mon=mon2num(t[2]); yyyy=t[3];  # День, месяц, год
+    hh=t[4]; mm=t[5]; ss=t[6];               # Часы, минуты, секунды
+    
+    # Создаем timestamp из компонентов даты
+    epoch = mktime(yyyy " " mon " " dd " " hh " " mm " " ss);
+    dow   = strftime("%u", epoch);            # День недели (1-7, где 1=понедельник)
+    
+    # Проверяем, что день с понедельника по субботу
+    if (dow >= 1 && dow <= 6) {
+      # Проверяем ночное время: после 21:00 или до 8:29
+      if ( (hh >= 21) || (hh < 8) || (hh == 8 && mm <= 29) ) {
+        print $0                               # Выводим строку, если условие выполнено
+      }
+    }
+  }
+}
+' /opt/access.log > ~/sysadm_lab_1_2/request_night.log
+
+# Пункт 6: Уникальные адреса с подсчетом и DNS
+echo "Пункт 6: Обработка уникальных IP-адресов..."
+
+# Очищаем выходной файл
+> fromhosts.log
+
+# Получаем список IP с подсчетом (без pipe в while)
+awk '{print $1}' /opt/access.log | sort | uniq -c | sort -rn > /tmp/ip_list.$$
+
+total_ips=$(wc -l < /tmp/ip_list.$$)
+current=0
+
+# Обрабатываем каждый IP
+while read count ip; do
+    current=$((current + 1))
+    echo -ne "Прогресс: $current/$total_ips\r"
+    
+    # Пытаемся получить DNS-имя
+    dns=$(timeout 2 getent hosts $ip 2>/dev/null | awk '{print $2}' | head -1)
+    
+    # Сразу записываем результат
+    if [ -n "$dns" ]; then
+        echo "$count -- $dns" >> fromhosts.log
+    else
+        echo "$count -- $ip" >> fromhosts.log
+    fi
+done < /tmp/ip_list.$$
+
+# Удаляем временный файл
+rm -f /tmp/ip_list.$$
+echo -e "\nСортировка результатов..."
+
+# Сортируем итоговый файл
+sort -k1 -rn -k3 -o fromhosts.log fromhosts.log
+
+echo "Готово. Создан файл fromhosts.log с $(wc -l < fromhosts.log) записями"
+
+# 7. Поиск всех URL с ошибками 4xx
+gawk -F'"' '  # Устанавливаем двойные кавычки как разделитель полей
+{
+  split($2,r," "); url=r[2];           # Извлекаем URL из HTTP запроса
+  split($3,a,/[[:space:]]+/); status=a[2]; # Извлекаем статус
+  
+  # Если статус 4xx и URL начинается с "/", выводим URL
+  if (status ~ /^4[0-9][0-9]$/ && url ~ /^\//) print url;
+}
+' /opt/access.log | sort -u | sort -r > ~/sysadm_lab_1_2/fail.log
+# Убираем дубликаты (sort -u) и сортируем в обратном порядке
+
+# Проверка созданных файлов
+echo "=================================="
+echo "Проверка созданных файлов:"
+ls -la *.log
+wc -l *.log

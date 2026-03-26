@@ -1,0 +1,21 @@
+﻿[users]
+DefaultAccount
+User
+WDAGUtilityAccount
+Администратор
+Гость
+
+[network]
+Realtek PCIe GbE Family Controller, 00:E0:23:43:E1:89
+Famatech Radmin VPN Ethernet Adapter, 02:50:9C:6A:36:3B
+WAN Miniport (IP), 72:79:20:52:41:53
+WAN Miniport (IPv6), 72:79:20:52:41:53
+WAN Miniport (Network Monitor), 72:79:20:52:41:53
+VirtualBox Host-Only Ethernet Adapter, 0A:00:27:00:00:0C
+TAP-Windows Adapter V9, 00:FF:B8:5E:B1:C4
+
+[startup]
+Name: YandexBrowserAutoLaunch_B64B7D5D07784CD66F00CA43360BB68B, Command: "C:\Users\User\AppData\Local\Yandex\YandexBrowser\Application\browser.exe" --no-startup-window --atlogin-bgr-mark /prefetch:5, Location: HKU\S-1-5-21-519473160-2292500471-3299881631-1002\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+Name: AMDNoiseSuppression, Command: "C:\Windows\system32\AMD\ANR\AMDNoiseSuppression.exe", Location: HKU\S-1-5-21-519473160-2292500471-3299881631-1002\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+Name: Mathworks Service Host, Command: "C:\Users\User\AppData\Local\MathWorks\ServiceHost\v2025.13.0.5\bin\win64\MathWorksServiceHost.exe" service --realm-id companion@prod@production, Location: HKU\S-1-5-21-519473160-2292500471-3299881631-1002\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+Name: XMouseButtonControl, Command: C:\Program Files\Highresolution Enterprises\X-Mouse Button Control\XMouseButtonControl.exe /notportable /delay, Location: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
