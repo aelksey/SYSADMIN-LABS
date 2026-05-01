@@ -32,7 +32,7 @@ I) Установить и настроить iSCSI Target из пакета ist
 
 ![alt text](image-4.png)
 
-6) Настройка Target и LUN. Редактируем файл конфигурации. В Ubuntu 22.04 tgt использует include директиву. Создадим отдельный файл для нашего target: 
+6) Настройка Target и LUN. Редактируем файл конфигурации. Создадим отдельный файл для нашего target: 
 
 ``` sudo vi /etc/tgt/conf.d/iscsi-lab3.conf ```
 
