@@ -1,0 +1,13 @@
+memTotalSwap: 626684 kB
+memAvailSwap: 626684 kB
+Swap Used: 0 kB
+
+dskPath                   | dskDevice                      | dskTotal(kB) | dskUsed(kB)  | dskAvail(kB) | dskPercent(%) | dskPercentNode(%)
+------------------------- | ------------------------------ | ------------ | ------------ | ------------ | ------------- | -------------
+/dev/pts                  | devpts                         | 0            | 0            | 0            | 0             | 100
+/dev/shm                  | tmpfs                          | 509916       | 0            | 509916       | 0             | 0
+/boot                     | /dev/sda1                      | 487652       | 30780        | 431272       | 7             | 0
+/proc/sys/fs/binfmt_misc  | none                           | 0            | 0            | 0            | 0             | 100
+/                         | /dev/mapper/vg_sysadm-lv_root  | 4936736      | 837696       | 3841608      | 18            | 7
+/proc                     | proc                           | 0            | 0            | 0            | 0             | 100
+/sys                      | sysfs                          | 0            | 0            | 0            | 0             | 100
